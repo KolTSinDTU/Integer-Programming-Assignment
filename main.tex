@@ -1,0 +1,156 @@
+\documentclass[12pt,oneside,a4paper,english]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=2.25cm,headheight=26pt,includeheadfoot]{geometry}
+\usepackage[main=english,icelandic]{babel}
+\usepackage{listings}
+\usepackage{titlesec}
+\usepackage{titling}
+\usepackage[framed, numbered]{matlab-prettifier}
+\usepackage{changepage}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[hidelinks]{hyperref}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{caption}
+\usepackage{tocloft}
+\usepackage{setspace}
+\usepackage{multirow}
+\usepackage{titling}
+\usepackage{float}
+\usepackage{comment}
+\usepackage{booktabs}
+\usepackage{indentfirst}
+\usepackage{lscape}
+\usepackage{caption}
+\usepackage[flushleft]{threeparttable}
+\usepackage[english]{nomencl}
+\usepackage[table]{xcolor}
+\usepackage{siunitx}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{microtype}
+
+
+% --- set footer and header ---
+\pagestyle{fancy}
+\fancyhf{}
+
+\setlength{\parindent}{2em}
+\title{Project 1} % to reference as \title, dont use \maketitle
+\makeatletter\let\Title\@title\makeatother
+
+
+
+\lstset{language=Matlab,
+style=Matlab-editor,
+basicstyle=\normalsize\mlttfamily,
+numbers=left,
+numberstyle={\scriptsize\color{black}},			% size of the numbers
+numbersep=0.5cm											
+}
+
+\newlist{steps}{enumerate}{1}
+\setlist[steps, 1]{leftmargin=1.5cm,label = Step \arabic*:}
+\renewcommand{\headrulewidth}{1pt}
+\renewcommand{\footrulewidth}{1pt}
+\lhead{\Title}
+\rhead{\nouppercase{\rightmark}}
+\lhead{\Title}
+\rfoot{\includegraphics[height=1.25cm]{root/logo.pdf}} % right header logo
+\setlength\headheight{16pt}
+\setlength{\footskip}{50pt}
+\lhead{\Title} %rightH title
+\cfoot{\thepage}
+
+% --- End of page settings ---
+
+\graphicspath{{root/}{generated/figures/}}
+\definecolor{ResultAccent}{HTML}{245B78}
+\definecolor{ResultLight}{HTML}{EDF4F7}
+\definecolor{ResultStripe}{HTML}{F5F8FA}
+\definecolor{CompleteColor}{HTML}{237A3B}
+\definecolor{PartialColor}{HTML}{A76500}
+\definecolor{MissingColor}{HTML}{B42318}
+
+\newcommand{\FormattedResult}[1]{%
+  \IfFileExists{generated/formatted/#1.tex}
+    {\input{generated/formatted/#1.tex}}
+    {\textit{Run \texttt{../build\_report.ps1} to generate these results.}}%
+}
+
+\newcommand{\ResultNote}[2]{%
+  \begin{center}
+  \setlength{\fboxsep}{8pt}%
+  \colorbox{ResultLight}{%
+    \parbox{\dimexpr\linewidth-2\fboxsep\relax}{%
+      \textcolor{ResultAccent}{\textbf{#1.}} #2%
+    }%
+  }
+  \end{center}
+}
+
+\newcommand{\GeneratedFigure}[2]{%
+  \IfFileExists{generated/figures/#1.pdf}{%
+    \begin{figure}[H]
+      \centering
+      \includegraphics[width=0.9\linewidth]{#1.pdf}
+      \caption{#2}
+    \end{figure}
+  }{%
+    \ResultNote{Missing generated figure}{Run
+    \texttt{../build\_report.ps1} to generate \texttt{#1.pdf}.}%
+  }%
+}
+
+\newcommand{\StatusComplete}{\textcolor{CompleteColor}{\textbf{Complete}}}
+\newcommand{\StatusPartial}{\textcolor{PartialColor}{\textbf{Partial}}}
+\newcommand{\StatusMissing}{\textcolor{MissingColor}{\textbf{Missing}}}
+
+\newcommand{\MissingSolution}[1]{%
+  \ResultNote{Missing or incomplete solution}{#1}%
+}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+
+\begin{document}
+\pagenumbering{gobble}
+\hypersetup{pageanchor=false}
+\input{sources/0_frontpage.tex}
+
+\clearpage
+\hypersetup{pageanchor=true}
+\pagenumbering{roman}
+\renewcommand{\baselinestretch}{1}\normalsize
+% \tableofcontents
+\renewcommand{\baselinestretch}{1}\normalsize
+\thispagestyle{fancy} % force page style
+
+\clearpage
+\pagenumbering{arabic} 
+\fancyfoot[C]{Page \thepage\ of \pageref{EndOfText}}
+
+
+
+
+
+
+
+\input{Modelling}
+\input{ElGrande}
+\input{Formulations}
+% \input{DynamicProgramming}
+
+
+
+
+
+
+\label{EndOfText}
+\label{endOfDoc}
+\end{document}

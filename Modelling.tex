@@ -1,0 +1,62 @@
+
+\subsubsection*{\underline{Modelling:} Question 1}
+
+We assume that each surgery is performed in full on a single day, that
+$r_s \in D$, and that $p_s, t_s, H_d \ge 0$. Let $x_{sd} \in \{0,1\}$ equal 1
+if surgery $s$ is performed on day $d$, and let $L_s \ge 0$ be the number of
+days surgery $s$ is performed after $r_s$.
+
+\begin{alignat}{2}
+\min \quad & \sum_{s \in S} p_s L_s && \label{eq:obj}\\
+\text{s.t.} \quad
+& \sum_{d \in D} x_{sd} = 1 && \qquad \forall s \in S \label{eq:assign}\\
+& \sum_{s \in S} t_s x_{sd} \le H_d && \qquad \forall d \in D \label{eq:cap}\\
+& L_s \ge (d - r_s) - M(1 - x_{sd}) && \qquad \forall s \in S,\ d \in D \label{eq:bigM}\\
+& x_{sd} \in \{0,1\},\ L_s \ge 0 && \qquad \forall s \in S,\ d \in D \label{eq:dom1}
+\end{alignat}
+
+\eqref{eq:assign} schedules every surgery exactly once and \eqref{eq:cap}
+enforces the daily capacity. In \eqref{eq:bigM}, $x_{sd}=1$ gives
+$L_s \ge d - r_s$, while $x_{sd}=0$ makes the right-hand side non-positive so
+the constraint is inactive. Minimisation then gives
+$L_s = \max\{0, d_s - r_s\}$, where $d_s$ is the day assigned to $s$.
+Since $d - r_s \le n - 1$, the value $M = n - 1$ is valid.
+
+\subsubsection*{Question 2}
+
+Add $w_{kd} \in \{0,1\}$, equal to 1 if surgeon $k$ works on day $d$, and the
+constraints
+\begin{alignat}{2}
+& x_{sd} \le w_{kd} && \qquad \forall k \in K,\ s \in S_k,\ d \in D \label{eq:link}\\
+& w_{kd} + w_{k,d+1} + w_{k,d+2} \le 2 && \qquad \forall k \in K,\ d = 1,\dots,n-2 \label{eq:consec}
+\end{alignat}
+\eqref{eq:link} marks a surgeon as working on every day they operate, and
+\eqref{eq:consec} forbids three consecutive working days. Equivalently,
+\eqref{eq:link} can be written in Big-M form as
+$\sum_{s \in S_k} x_{sd} \le M_k\, w_{kd}$ for all $k \in K$, $d \in D$, $M_k=|S_k|$, since surgeon $k$ can perform at most $|S_k|$ surgeries on a single day.
+
+\subsubsection*{Question 3}
+
+Add $z_d \in \{0,1\}$, equal to 1 if at least $\rho$ hours are kept free on
+day $d$, replace \eqref{eq:cap} by \eqref{eq:reserve}, and add \eqref{eq:80}:
+\begin{alignat}{2}
+& \sum_{s \in S} t_s x_{sd} \le H_d - \rho + M(1 - z_d) && \qquad \forall d \in D \label{eq:reserve}\\
+& \sum_{d \in D} z_d \ge \lceil 0.8\, n \rceil && \label{eq:80}
+\end{alignat}
+If $z_d = 1$, at least $\rho$ hours are unused on day $d$. If $z_d = 0$, the
+constraint must reduce to the ordinary capacity $H_d$, which requires
+$M = \rho$. With this choice \eqref{eq:reserve} becomes
+$\sum_{s} t_s x_{sd} \le H_d - \rho z_d$. Constraint \eqref{eq:80} ensures
+that capacity is reserved on at least $80\%$ of the days.
+
+\subsubsection*{Question 4}
+
+Add $y_d \in \{0,1\}$, equal to 1 if the robot is activated on day $d$,
+replace \eqref{eq:obj} by \eqref{eq:obj4}, and add \eqref{eq:robot}:
+\begin{alignat}{2}
+\min \quad & \sum_{s \in S} p_s L_s + \gamma \sum_{d \in D} y_d && \label{eq:obj4}\\
+& x_{sd} \le y_d && \qquad \forall s \in R,\ d \in D \label{eq:robot}
+\end{alignat}
+\eqref{eq:robot} activates the robot on every day with a robotic surgery, and
+since $\gamma > 0$, $y_d = 0$ on all other days. Equivalently, in Big-M form:
+$\sum_{s \in R} x_{sd} \le |R|\, y_d$ for all $d \in D$.
