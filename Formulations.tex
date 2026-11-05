@@ -1,6 +1,5 @@
 \section*{Question 10}
 
-\paragraph{Greedy principle.}
 Starting from an empty selection, we repeatedly add the route with the
 lowest \emph{effective cost per newly covered location},
 \[
@@ -13,22 +12,23 @@ covering at least one new location are considered, and ties are broken by
 the lowest route index. The procedure stops when all ten locations are
 covered, so the solution is feasible.
 
-\paragraph{Iterations.}
-\begin{center}
-\begin{tabular}{@{}clcl@{}}
-\toprule
-It. & Selected route & $r_j$ & Covered after iteration \\
-\midrule
-1 & S2 $\{1,3,4\}$  & $8/3 = 2.67$          & $\{1,3,4\}$ \\
-2 & S3 $\{2,6\}$    & $7/2 = 3.50$          & $\{1,2,3,4,6\}$ \\
-3 & S8 $\{8,9,10\}$ & $14/3 = 4.67$         & $\{1,2,3,4,6,8,9,10\}$ \\
-4 & S4 $\{3,7\}$    & $(6+1)/1 = 7$         & $\{1,\dots,4,6,\dots,10\}$ \\
-5 & S1 $\{1,2,5\}$  & $(9+2+1)/1 = 12$      & $\{1,\dots,10\}$ \\
-\bottomrule
-\end{tabular}
-\end{center}
+\begin{table}[H]
+    \centering
+    \begin{tabular}{@{}clcl@{}}
+    \toprule
+    It. & Selected route & $r_j$ & Covered after iteration \\
+    \midrule
+    1 & S2 $\{1,3,4\}$  & $8/3 = 2.67$          & $\{1,3,4\}$ \\
+    2 & S3 $\{2,6\}$    & $7/2 = 3.50$          & $\{1,2,3,4,6\}$ \\
+    3 & S8 $\{8,9,10\}$ & $14/3 = 4.67$         & $\{1,2,3,4,6,8,9,10\}$ \\
+    4 & S4 $\{3,7\}$    & $(6+1)/1 = 7$         & $\{1,\dots,4,6,\dots,10\}$ \\
+    5 & S1 $\{1,2,5\}$  & $(9+2+1)/1 = 12$      & $\{1,\dots,10\}$ \\
+    \bottomrule
+    \end{tabular}
+    \caption{Iterations of the greedy algorithm}
+    \label{tab:placeholder}
+\end{table}
 
-\paragraph{Solution.}
 The greedy solution is $\{S1, S2, S3, S4, S8\}$. Locations 1, 2 and 3 are
 each covered twice, and no route can be removed without leaving a location
 uncovered. The objective value is

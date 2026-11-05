@@ -1,0 +1,148 @@
+\begin{appendicies}
+    
+
+    \begin{verbatim}
+        using JuMP, HiGHS, LinearAlgebra
+
+b = [12, 24, 20, 28, 10, 11, 30, 27, 22, 25, 40, 38, 32, 34, 36]    # Strategic benefit
+a  = [14, 8, 7, 10, 13, 12, 9, 8, 7, 8, 12, 11, 10, 9, 10]          # Resource consumption
+C = [28, 32, 35]                                                    # Team capacity
+
+n = 3
+m = 15
+
+P = [(2,1), (3,1), (4,1), (7,5), (8,5), (9,6), (10,6), (11,7), (12,8), (15,10)]   # (i,k): i requires k
+G = [2, 3, 4, 7, 8]                                                               # choose exactly 3
+
+# Constraint groups of the Question 5 model
+const GROUPS = [:assign, :cap, :prec, :excl, :card]
+
+# Builds the model with the groups in `keep` as constraints. The groups in `relax`
+# are returned as a list of (expression g, is_equality), written as g <= 0 or g == 0.
+function build(keep, relax; integer = true)
+    model = Model(HiGHS.Optimizer)
+    set_silent(model)
+    set_attribute(model, "mip_rel_gap", 0.0)    # subproblems must be solved exactly for a valid bound
+    @variable(model, x[1:n,1:m], Bin)
+    @variable(model, y[1:m], Bin)
+    integer || relax_integrality(model)
+
+    rows = Dict(
+        :assign => [(sum(x[j,i] for j=1:n) - y[i], true) for i=1:m],
+        :cap    => [(sum(a[i]*x[j,i] for i=1:m) - C[j], false) for j=1:n],
+        :prec   => [(y[i] - y[k], false) for (i,k) in P],
+        :excl   => [(y[11] + y[12] - 1, false)],
+        :card   => [(sum(y[i] for i in G) - 3, true)],
+    )
+    for g in keep, (expr, eq) in rows[g]
+        eq ? @constraint(model, expr == 0) : @constraint(model, expr <= 0)
+    end
+    relaxed = vcat([rows[g] for g in relax]...)
+    return model, x, y, relaxed
+end
+
+# Full IP and LP relaxation
+function solve_full(; integer = true)
+    model, x, y, _ = build(GROUPS, []; integer = integer)
+    @objective(model, Max, sum(b[i]*y[i] for i=1:m))
+    optimize!(model)
+    return objective_value(model)
+end
+
+Z_IP = solve_full()
+Z_LP = solve_full(integer = false)
+
+# Lagrangian dual by subgradient with Polyak steps, as in Question 8:
+#   Z_LR(lambda) = max b'y - sum lambda_r g_r(x,y),  lambda_r >= 0 for inequalities, free for equalities
+function lagrangian_dual(relax; LB = Z_IP, maxK = 1000, theta = 2.0, patience = 10)
+    keep = setdiff(GROUPS, relax)
+    model, x, y, relaxed = build(keep, relax)
+    lambda = zeros(length(relaxed))
+    best = Inf
+    stall = 0
+
+    for k = 1:maxK
+        @objective(model, Max, sum(b[i]*y[i] for i=1:m)
+                               - sum(lambda[r]*relaxed[r][1] for r in eachindex(relaxed)))
+        optimize!(model)
+        Z = objective_value(model)
+
+        if Z < best - 1e-6
+            best = Z
+            stall = 0
+        else
+            stall += 1
+            if stall >= patience
+                theta /= 2
+                stall = 0
+            end
+        end
+
+        # Violation of the relaxed constraints in the subproblem solution
+        g = [value(expr) for (expr, _) in relaxed]
+        norm(g) < 1e-9 && break         # subproblem solution is feasible
+        theta < 1e-6 && break
+
+        t = theta * (Z - LB) / norm(g)^2
+        for r in eachindex(relaxed)
+            lambda[r] += t * g[r]
+            relaxed[r][2] || (lambda[r] = max(lambda[r], 0.0))
+        end
+    end
+    return best
+end
+
+# Exact Lagrangian dual by Kelley's cutting-plane method. Every subproblem solution s
+# gives a cut  eta >= b'y^s - sum lambda_r g_r^s, and the master LP minimises eta over these cuts.
+function lagrangian_dual_exact(relax; maxK = 500, bound = 1e3)
+    keep = setdiff(GROUPS, relax)
+    model, x, y, relaxed = build(keep, relax)
+
+    master = Model(HiGHS.Optimizer)
+    set_silent(master)
+    @variable(master, eta)
+    @variable(master, -bound <= lambda[r in eachindex(relaxed)] <= bound)
+    for r in eachindex(relaxed)
+        relaxed[r][2] || set_lower_bound(lambda[r], 0.0)
+    end
+    @objective(master, Min, eta)
+
+    lambda_k = zeros(length(relaxed))
+    best = Inf
+    for k = 1:maxK
+        @objective(model, Max, sum(b[i]*y[i] for i=1:m)
+                               - sum(lambda_k[r]*relaxed[r][1] for r in eachindex(relaxed)))
+        optimize!(model)
+        best = min(best, objective_value(model))
+
+        by = sum(b[i]*value(y[i]) for i=1:m)
+        g = [value(expr) for (expr, _) in relaxed]
+        @constraint(master, eta >= by - sum(lambda[r]*g[r] for r in eachindex(relaxed)))
+
+        optimize!(master)
+        lower = objective_value(master)
+        best - lower < 1e-6 && break
+        lambda_k = value.(lambda)
+    end
+    return best
+end
+
+relaxations = [
+    ("side constraints (report)",     [:prec, :excl, :card]),
+    ("assignment",                    [:assign]),
+    ("assignment + side constraints", [:assign, :prec, :excl, :card]),
+    ("capacity",                      [:cap]),
+    ("capacity + side constraints",   [:cap, :prec, :excl, :card]),
+]
+
+println("Z_IP = $(Z_IP)")
+println("Z_LP = $(round(Z_LP, digits=2))")
+for (name, relax) in relaxations
+    Z_sub = lagrangian_dual(relax)
+    Z_LD = lagrangian_dual_exact(relax)
+    println(rpad("Relax " * name, 40), "subgradient = $(rpad(round(Z_sub, digits=2), 8))",
+            "exact Z_LD = $(round(Z_LD, digits=2))")
+end
+
+    \end{verbatim}
+\end{appendicies}
