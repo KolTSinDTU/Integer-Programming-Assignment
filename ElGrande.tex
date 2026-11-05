@@ -223,7 +223,7 @@ capacity constraints remain satisfied throughout and the result is feasible.
   \item Only one unit of capacity remains, so no initiative can be added.
 \end{enumerate}
 
-\begin{table}[h]
+\begin{table}[H]
 \centering
 \begin{tabular}{@{}lll@{}}
 \toprule
@@ -244,8 +244,4 @@ gives a best feasible value of 220, so
 \[
 220 \le Z_{IP} \le 254.
 \]
-The optimal value $Z_{IP} = 244$ lies within this interval. The heuristic is
-simple and myopic: the relaxation fills all three teams completely, so
-repairing the precedence violations forces the removal of valuable
-initiatives. A local search with swaps of up to two initiatives in and out
-did not improve the solution.
+The optimal value $Z_{IP} = 244$ lies within this interval. The heuristic is simple and myopic: the relaxation fills all three teams completely, so repairing the precedence violations forces the removal of valuable initiatives. A local search with swaps of up to two initiatives in and out did not improve the solution.
