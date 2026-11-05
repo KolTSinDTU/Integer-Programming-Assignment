@@ -1,5 +1,6 @@
 \section*{Question 10}
 
+\paragraph{Greedy principle.}
 Starting from an empty selection, we repeatedly add the route with the
 lowest \emph{effective cost per newly covered location},
 \[
@@ -12,23 +13,22 @@ covering at least one new location are considered, and ties are broken by
 the lowest route index. The procedure stops when all ten locations are
 covered, so the solution is feasible.
 
-\begin{table}[H]
-    \centering
-    \begin{tabular}{@{}clcl@{}}
-    \toprule
-    It. & Selected route & $r_j$ & Covered after iteration \\
-    \midrule
-    1 & S2 $\{1,3,4\}$  & $8/3 = 2.67$          & $\{1,3,4\}$ \\
-    2 & S3 $\{2,6\}$    & $7/2 = 3.50$          & $\{1,2,3,4,6\}$ \\
-    3 & S8 $\{8,9,10\}$ & $14/3 = 4.67$         & $\{1,2,3,4,6,8,9,10\}$ \\
-    4 & S4 $\{3,7\}$    & $(6+1)/1 = 7$         & $\{1,\dots,4,6,\dots,10\}$ \\
-    5 & S1 $\{1,2,5\}$  & $(9+2+1)/1 = 12$      & $\{1,\dots,10\}$ \\
-    \bottomrule
-    \end{tabular}
-    \caption{Iterations of the greedy algorithm}
-    \label{tab:placeholder}
-\end{table}
+\paragraph{Iterations.}
+\begin{center}
+\begin{tabular}{@{}clcl@{}}
+\toprule
+It. & Selected route & $r_j$ & Covered after iteration \\
+\midrule
+1 & S2 $\{1,3,4\}$  & $8/3 = 2.67$          & $\{1,3,4\}$ \\
+2 & S3 $\{2,6\}$    & $7/2 = 3.50$          & $\{1,2,3,4,6\}$ \\
+3 & S8 $\{8,9,10\}$ & $14/3 = 4.67$         & $\{1,2,3,4,6,8,9,10\}$ \\
+4 & S4 $\{3,7\}$    & $(6+1)/1 = 7$         & $\{1,\dots,4,6,\dots,10\}$ \\
+5 & S1 $\{1,2,5\}$  & $(9+2+1)/1 = 12$      & $\{1,\dots,10\}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
 
+\paragraph{Solution.}
 The greedy solution is $\{S1, S2, S3, S4, S8\}$. Locations 1, 2 and 3 are
 each covered twice, and no route can be removed without leaving a location
 uncovered. The objective value is
@@ -38,3 +38,11 @@ uncovered. The objective value is
 \underbrace{\rho_1 + \rho_2 + \rho_3}_{2+1+1 \,=\, 4}
 \;=\; 48 .
 \]
+
+\subsection*{Question 11}
+Let $c_i$ be the operating cost of selecting route $i$ and $\rho_j$ be the penalty for over-coverage of location $j$. Let $x_i \in \{1,0\}$ equal 1 if route $i$ is selected and 0 otherwise, and $y_j \in \mathbb{N}$ be the number of times location $j$ is inspected.
+\begin{align}
+    \min \quad & \sum_{i=1}^{12} c_i  x_i  + \sum_{j=1}^{10}\rho_j (y_j-1) && \label{eq:q11obj}\\
+    \text{s.t.} \quad & y_j \geq 1 && \qquad \forall j \in \{1,\dots,10\} \label{eq:q11assign}\\
+
+\end{align}
