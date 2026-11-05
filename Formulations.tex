@@ -38,3 +38,11 @@ uncovered. The objective value is
 \underbrace{\rho_1 + \rho_2 + \rho_3}_{2+1+1 \,=\, 4}
 \;=\; 48 .
 \]
+
+\subsection*{Question 11}
+Let $c_i$ be the operating cost of selecting route $i$ and $\rho_j$ be the penalty for over-coverage of location $j$. Let $x_i \in \{1,0\}$ equal 1 if route $i$ is selected and 0 otherwise, and $y_j \in \mathbb{N}$ be the number of times location $j$ is inspected.
+\begin{align}
+    \min \quad & \sum_{i=1}^{12} c_i  x_i  + \sum_{j=1}^{10}\rho_j (y_j-1) && \label{eq:q11obj}\\
+    \text{s.t.} \quad & y_j \geq 1 && \qquad \forall j \in \{1,\dots,10\} \label{eq:q11assign}\\
+
+\end{align}

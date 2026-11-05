@@ -43,54 +43,49 @@ cardinality side constraints.
 
 
 \subsubsection*{Question 6}
-We relax the side constraints \eqref{eq:q5prec}--\eqref{eq:q5card} and keep
-the assignment and capacity constraints \eqref{eq:q5assign}--\eqref{eq:q5cap}.
-The multipliers are
-\begin{itemize}
-  \item $\lambda_{ik} \ge 0$ for the precedence constraints
-        $y_i - y_k \le 0$, $(i,k) \in P$,
-  \item $\nu \ge 0$ for the exclusivity constraint $y_{11} + y_{12} \le 1$,
-  \item $\mu \in \mathbb{R}$ (free, since it is an equality) for the
-        cardinality constraint $\sum_{i \in G} y_i = 3$, where
-        $G = \{2,3,4,7,8\}$.
-\end{itemize}
-
-The relaxed model then becomes:
+We relax the assignment constraints \eqref{eq:q5assign}, which are the only
+constraints linking the selection variables $y$ to the team variables $x$, and
+keep the capacity constraints \eqref{eq:q5cap} and the side constraints
+\eqref{eq:q5prec}--\eqref{eq:q5card}. Since \eqref{eq:q5assign} are
+equalities, the multipliers $u_i \in \mathbb{R}$, $i \in I$, are free. The
+relaxed model is
 \begin{alignat}{2}
-Z_{LR}(\lambda,\nu,\mu) = \max \quad
-& \sum_{i \in I} b_i y_i
-  - \sum_{(i,k) \in P} \lambda_{ik}(y_i - y_k)
-  - \nu\,(y_{11} + y_{12} - 1)
-  + \mu \Big(3 - \sum_{i \in G} y_i\Big) && \label{eq:q6obj}\\
+Z_{LR}(u) = \max \quad
+& \sum_{i \in I} b_i y_i + \sum_{i \in I} u_i \Big(\sum_{j \in J} x_{ij} - y_i\Big) && \label{eq:q6obj}\\
 \text{s.t.} \quad
-& \sum_{j \in J} x_{ij} = y_i &&  \forall i \in I \notag\\
 & \sum_{i \in I} a_i x_{ij} \le C_j &&  \forall j \in J \notag\\
+& y_i \le y_k &&  \forall (i,k) \in P \notag\\
+& y_{11} + y_{12} \le 1, \qquad y_2 + y_3 + y_4 + y_7 + y_8 = 3 && \notag\\
 & x_{ij},\, y_i \in \{0,1\} &&  \forall i \in I,\ j \in J \notag
 \end{alignat}
+Every feasible solution of the original problem satisfies
+$\sum_j x_{ij} - y_i = 0$, so the penalty term vanishes and
+$Z_{LR}(u) \ge Z_{IP}$ for all $u \in \mathbb{R}^{15}$.
 
-Collecting terms, the objective can be written as
+Collecting terms, no constraint contains both $x$ and $y$, and the relaxation
+decomposes into independent subproblems:
 \[
-Z_{LR}(\lambda,\nu,\mu) = \nu + 3\mu + \max \sum_{i \in I} \tilde b_i\, y_i,
+Z_{LR}(u) =
+\underbrace{\max_{y \in Y} \sum_{i \in I} (b_i - u_i)\, y_i}_{\text{selection problem}}
+\; + \; \sum_{j \in J}
+\underbrace{\max \Big\{ \sum_{i \in I} u_i x_{ij} \;:\; \sum_{i \in I} a_i x_{ij} \le C_j,\ x_{ij} \in \{0,1\} \Big\}}_{\text{0-1 knapsack for team } j},
 \]
-with modified benefits
-\[
-\tilde b_i = b_i
-- \sum_{k:(i,k) \in P} \lambda_{ik}
-+ \sum_{k:(k,i) \in P} \lambda_{ki}
-- \nu\, [\, i \in \{11,12\} \,]
-- \mu\, [\, i \in G \,],
-\]
-where $[\cdot]$ equals 1 if the condition holds and 0 otherwise.
+where $Y$ is the set of binary $y$ satisfying
+\eqref{eq:q5prec}--\eqref{eq:q5card}. The multiplier $u_i$ can be read as a
+price on initiative $i$: the selection problem pays $u_i$ for selecting it,
+and each team is paid $u_i$ for packing it. The three knapsacks are solved by
+dynamic programming, and the selection problem has only 15 binary variables.
 
-For any $\lambda \ge 0$, $\nu \ge 0$ and $\mu \in \mathbb{R}$, every feasible
-solution of the original problem is feasible in the relaxation and the penalty
-terms are non-negative, so $Z_{LR}(\lambda,\nu,\mu) \ge Z_{IP}$.
-The remaining subproblem is a Multiple Knapsack Problem with profits
-$\tilde b_i$; initiatives with $\tilde b_i \le 0$ are simply not selected.
-This subproblem does not have the integrality property, since its LP relaxation
-can have fractional solutions due to the capacity constraints. Therefore the
-Lagrangian dual bound can be strictly tighter than the LP relaxation bound,
-$Z_{IP} \le Z_{LD} \le Z_{LP}$, which is the purpose of the investigation.
+The relaxation is chosen so that the subproblem is easy but does \emph{not}
+have the integrality property: the LP relaxation of a knapsack can have
+fractional solutions, and the side constraints are not integral either.
+The Lagrangian dual bound is
+$Z_{LD} = \max\{ b^\top y : \eqref{eq:q5assign},\ (x,y) \in \operatorname{conv}(X_1 \times X_2 \times X_3 \times Y) \}$,
+where $X_j$ is the set of feasible packings of team $j$, so it can be strictly
+tighter than the LP bound, $Z_{IP} \le Z_{LD} \le Z_{LP}$. Relaxing instead
+the side constraints keeps the hard Multiple Knapsack structure in the
+subproblem and convexifies only the capacity constraints. We tested this
+alternative, and it gives only $Z_{LD} = 254.73$.
 
 
 \subsubsection*{Question 7}
@@ -98,46 +93,43 @@ $Z_{IP} \le Z_{LD} \le Z_{LP}$, which is the purpose of the investigation.
 The Lagrangian dual problem finds the multipliers that give the tightest
 (smallest) upper bound from the relaxation in Question 6:
 \begin{equation}
-Z_{LD} = \min_{\lambda,\, \nu,\, \mu} \; Z_{LR}(\lambda,\nu,\mu)
-\quad \text{s.t.} \quad
-\lambda_{ik} \ge 0 \ \ \forall (i,k) \in P, \qquad
-\nu \ge 0, \qquad
-\mu \in \mathbb{R}.
+Z_{LD} = \min_{u \in \mathbb{R}^{15}} Z_{LR}(u)
+= \min_{u \in \mathbb{R}^{15}} \left\{
+\max_{y \in Y} \sum_{i \in I} (b_i - u_i)\, y_i
++ \sum_{j \in J} \max_{x_{\cdot j} \in X_j} \sum_{i \in I} u_i x_{ij}
+\right\}.
 \label{eq:q7dual}
 \end{equation}
-Written out in full, this is
-\[
-Z_{LD} = \min_{\lambda \ge 0,\, \nu \ge 0,\, \mu \in \mathbb{R}}
-\left\{ \nu + 3\mu +
-\max_{(x,y) \in X} \sum_{i \in I} \tilde b_i(\lambda,\nu,\mu)\, y_i \right\},
-\]
-where $X$ is the set of solutions $(x,y)$ that satisfy the assignment and
-capacity constraints \eqref{eq:q5assign}--\eqref{eq:q5cap} and are binary, and
-$\tilde b_i(\lambda,\nu,\mu)$ are the modified benefits from Question 6.
+The multipliers are unrestricted in sign because the relaxed constraints are
+equalities.
 
 $Z_{LR}$ is the maximum of a finite number of functions that are linear in
-$(\lambda,\nu,\mu)$, one for each $(x,y) \in X$. It is therefore convex and
-piecewise linear, but not differentiable everywhere, which is why we use a
-subgradient method to solve \eqref{eq:q7dual}. By weak duality,
-$Z_{IP} \le Z_{LD}$, and since the subproblem does not have the integrality
-property, $Z_{LD} \le Z_{LP}$, possibly with strict inequality.
+$u$, one for each feasible $(x,y)$. It is therefore convex and piecewise
+linear, but not differentiable everywhere, which is why we use a subgradient
+method to solve \eqref{eq:q7dual}. For a subproblem solution $(x^k,y^k)$ at
+$u^k$, the vector $g^k$ with $g^k_i = \sum_j x^k_{ij} - y^k_i$ is a
+subgradient of $Z_{LR}$ at $u^k$.
 
 
-
-
-\section*{Question 8}
+\subsubsection*{Question 8}
 
 The LP relaxation of the model in Question 5 and the Lagrangian dual from
-Question 7 were solved in Python with SciPy/HiGHS. Each Lagrangian subproblem, a Multiple Knapsack
-Problem with modified benefits $\tilde b_i$, was solved to optimality as a
-MIP. The multipliers were initialised at zero and updated with Polyak steps
+Question 7 were solved in Julia/JuMP with HiGHS (\texttt{assignment\_relaxation.jl}).
+In each iteration the three knapsacks are solved by dynamic programming and
+the selection problem as a small MIP. The multipliers start at $u^0 = 0$ and
+are updated as
 \[
-t_k = \theta_k \frac{Z_{LR}(\lambda^k,\nu^k,\mu^k) - \underline{Z}}{\lVert g^k \rVert^2},
+u^{k+1} = u^k - t_k\, g^k, \qquad
+t_k = \theta_k \frac{Z_{LR}(u^k) - \underline{Z}}{\lVert g^k \rVert^2},
 \]
-where $g^k$ is the violation of the relaxed constraints in the subproblem
-solution, $\underline{Z} = 244$ is the best known feasible value, and
-$\theta_0 = 2$ is halved after 10 iterations without improvement.
-Multipliers of inequality constraints are projected onto $\mathbb{R}_+$.
+without projection, since $u$ is free. If initiative $i$ is selected but not
+packed ($g_i < 0$), its price $u_i$ increases, which makes packing it more
+attractive for the teams and selecting it less attractive. If it is packed
+more often than selected ($g_i > 0$), the price decreases. $\underline{Z}$ is
+the best feasible value found so far by the Lagrangian heuristic of Question~9,
+and $\theta_0 = 2$ is halved after 10 iterations without improvement. Since
+all benefits are integer, the method stops when
+$\lfloor \min_k Z_{LR}(u^k) \rfloor \le \underline{Z}$.
 
 \begin{center}
 \begin{tabular}{@{}lr@{}}
@@ -145,82 +137,90 @@ Multipliers of inequality constraints are projected onto $\mathbb{R}_+$.
 Bound & Value \\
 \midrule
 Optimal IP value $Z_{IP}$ & $244.00$ \\
-Lagrangian dual bound $Z_{LD}$ (subgradient) & $254.73$ \\
+Lagrangian bound, subgradient (58 iterations) & $244.90$ \\
+Lagrangian dual $Z_{LD}$ (exact, cutting planes) & $244.00$ \\
 LP relaxation bound $Z_{LP}$ & $254.89$ \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-The best upper bound obtained is $Z_{LD} \approx 254.73$. The exact value,
-verified by column generation, is $254.728$. It is slightly tighter than the
-LP bound, as predicted by $Z_{IP} \le Z_{LD} \le Z_{LP}$, but the improvement
-is only about $0.16$. Since all benefits are integer, both bounds give the same
-integer bound of $254$, and the gap to $Z_{IP} = 244$ remains about $10.7$.
+The best upper bound from the subgradient method is $244.90$, which gives
+the integer bound $244$. The exact value of the Lagrangian dual, computed with
+a cutting-plane method in \texttt{LB.jl}, is $Z_{LD} = 244$. The Lagrangian
+bound is therefore much tighter than the LP bound of $254.89$ and closes the
+entire gap to $Z_{IP}$.
+
+This agrees with $Z_{IP} \le Z_{LD} \le Z_{LP}$. The LP relaxation only uses
+the LP versions of the capacity and side constraints, whereas the Lagrangian
+dual uses the convex hulls of the knapsack sets $X_j$ and of the selection
+set $Y$. Since none of these has the integrality property, the convex hulls
+are strictly smaller than their LP relaxations, and in this instance enough
+smaller that the bound equals the optimum. For comparison, relaxing the side
+constraints gives only $254.73$. Relaxing the side constraints together with
+the assignment or capacity constraints gives exactly $Z_{LP}$, since the
+remaining subproblem then has the integrality property.
 
 
-
-
-
-\section*{Question 9}
+\subsubsection*{Question 9}
 
 The Lagrangian relaxation does \emph{not} terminate with a feasible solution.
-The subproblem solution in the final subgradient iteration
-($Z_{LR} = 254.73$) is shown in Table~\ref{tab:q9lr}.
+In the final iteration ($k = 58$, $Z_{LR} = 244.90$) the selection problem
+chooses
+\[
+y = \{1, 2, 3, 4, 6, 9, 10, 13, 14, 15\}, \qquad \text{benefit } 244,
+\]
+which satisfies all side constraints, but the knapsacks pack the items in
+Table~\ref{tab:q9lr}. Initiative 6 is packed by all three teams, 14 by two
+teams, and 2, 3, 4 and 10 are selected but not packed, so the assignment
+constraints are violated.
 
 \begin{table}[h]
 \centering
 \begin{tabular}{@{}lll@{}}
 \toprule
-Team (capacity) & Initiatives & Load \\
+Team (capacity) & Initiatives packed & Load \\
 \midrule
-1 (28) & 7, 13, 14 & 28 \\
-2 (32) & 5, 10, 12 & 32 \\
-3 (35) & 2, 3, 6, 8 & 35 \\
+1 (28) & 6, 9, 14 & 28 \\
+2 (32) & 6, 13, 15 & 32 \\
+3 (35) & 1, 6, 14 & 35 \\
 \bottomrule
 \end{tabular}
-\caption{Subproblem solution in the final subgradient iteration
-(benefit 251).}
+\caption{Knapsack solutions in the final subgradient iteration.}
 \label{tab:q9lr}
 \end{table}
 
-It violates the precedence constraints for initiatives 2 and 3 (initiative 1
-is not selected), and the cardinality constraint, since four initiatives
-(2, 3, 7, 8) are selected from $G$.
-
 \paragraph{Lagrangian heuristic.}
-Starting from the subproblem solution, including its team assignment:
+The selection $y$ already satisfies the side constraints, so only the packing
+has to be repaired:
 \begin{enumerate}
-  \item \textbf{Precedence:} drop every initiative whose prerequisite is not
-        selected, together with any initiatives that depend on it.
-  \item \textbf{Exclusivity:} if both 11 and 12 are selected, drop the one
-        with the lower ratio $b_i/a_i$.
-  \item \textbf{Cardinality:} if more than three initiatives from $G$ are
-        selected, drop those with the lowest benefit. If fewer, add the
-        initiative from $G$ with the highest $b_i/a_i$ that fits, together
-        with any missing prerequisites, placing each in the team with the
-        most free capacity. If none fits, drop the selected non-$G$
-        initiative with the lowest $b_i/a_i$ that is not a prerequisite of
-        another selected initiative, and try again.
-  \item \textbf{Greedy fill:} add the remaining non-$G$ initiatives in
-        decreasing order of $b_i/a_i$ whenever they fit in a team and their
-        prerequisites and exclusivity allow it.
+  \item \textbf{Keep:} for every selected initiative packed by at least one
+        team, keep it in one of those teams. Remove duplicates and initiatives
+        that are packed but not selected.
+  \item \textbf{Place:} place the remaining selected initiatives, largest
+        $a_i$ first, in the team with the most free capacity. If one does not
+        fit, drop the \emph{removable} initiative with the lowest $b_i/a_i$
+        and try again. An initiative is removable if it is not in
+        $\{2,3,4,7,8\}$ and not a prerequisite of another selected initiative,
+        so dropping it keeps the precedence, exclusivity and cardinality
+        constraints satisfied.
+  \item \textbf{Greedy fill:} add unselected initiatives outside
+        $\{2,3,4,7,8\}$ in decreasing order of $b_i/a_i$ whenever they fit in
+        a team and their prerequisites and exclusivity allow it.
 \end{enumerate}
-Steps 1--3 only remove initiatives or add initiatives that fit, so the
-capacity constraints remain satisfied throughout and the result is feasible.
+Steps 1--3 never exceed a capacity and never violate a side constraint, so
+the result is feasible.
 
 \paragraph{Demonstration.}
 \begin{enumerate}
-  \item Initiatives 2 and 3 are dropped, since initiative 1 is missing.
-        Team 3 now holds $\{6, 8\}$ with load 20, and $G$ contains only
-        $\{7, 8\}$.
-  \item Initiative 11 is not selected, so nothing changes.
-  \item One more initiative from $G$ is needed. The best candidate is 2
-        ($b/a = 3.0$), which requires initiative 1, i.e.\ $22$ units, but
-        only 15 units are free. Initiative 10 has the lowest ratio among
-        removable non-$G$ initiatives ($25/8$), so it is dropped, freeing
-        8 units in team 2. Initiative 1 is then placed in team 3 and
-        initiative 2 in team 2.
-  \item Only one unit of capacity remains, so no initiative can be added.
+  \item The duplicates of 6 and 14 are removed. Team 1 keeps $\{6,9,14\}$
+        (load 28), team 2 keeps $\{13,15\}$ (load 20) and team 3 keeps
+        $\{1\}$ (load 14).
+  \item Initiatives 4, 2, 10 and 3 must be placed. Initiative 4 goes to
+        team 3, 2 to team 2 and 10 to team 3, giving loads 28, 28 and 32.
+        Initiative 3 ($a_3 = 7$) does not fit. The removable initiatives are
+        9, 13, 14 and 15, and 9 has the lowest ratio ($22/7$), so it is dropped
+        from team 1 and initiative 3 is placed there instead.
+  \item The free capacities are 0, 4 and 3, so nothing can be added.
 \end{enumerate}
 
 \begin{table}[h]
@@ -229,23 +229,25 @@ capacity constraints remain satisfied throughout and the result is feasible.
 \toprule
 Team (capacity) & Initiatives & Load \\
 \midrule
-1 (28) & 7, 13, 14 & 28 \\
-2 (32) & 2, 5, 12 & 32 \\
-3 (35) & 1, 6, 8 & 34 \\
+1 (28) & 3, 6, 14 & 28 \\
+2 (32) & 2, 13, 15 & 28 \\
+3 (35) & 1, 4, 10 & 32 \\
 \bottomrule
 \end{tabular}
-\caption{Feasible solution from the Lagrangian heuristic (benefit 218).}
+\caption{Feasible solution from the Lagrangian heuristic in the final
+iteration (benefit 222).}
 \label{tab:q9heur}
 \end{table}
 
-The resulting solution in Table~\ref{tab:q9heur} satisfies all constraints
-and has benefit 218. Applying the heuristic in every subgradient iteration
-gives a best feasible value of 220, so
+The resulting solution in Table~\ref{tab:q9heur} is feasible with benefit
+222. The heuristic is myopic: the selection $y$ in the final iteration is in
+fact optimal, and all ten initiatives fit exactly into the 95 units of
+capacity, but the largest-first placement does not find this packing.
+Applying the heuristic in every subgradient iteration found the values 199,
+213, 222 and, in iteration 50, 244 with teams $\{2,13,15\}$, $\{1,4,10\}$
+and $\{3,6,9,14\}$ (loads 28, 32 and 35). Together with the Lagrangian bound,
 \[
-220 \le Z_{IP} \le 254.
+244 \le Z_{IP} \le \lfloor 244.90 \rfloor = 244,
 \]
-The optimal value $Z_{IP} = 244$ lies within this interval. The heuristic is
-simple and myopic: the relaxation fills all three teams completely, so
-repairing the precedence violations forces the removal of valuable
-initiatives. A local search with swaps of up to two initiatives in and out
-did not improve the solution.
+so the Lagrangian relaxation and the heuristic together prove that this
+solution is optimal.
